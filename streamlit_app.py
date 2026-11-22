@@ -17,9 +17,11 @@ from investor_fit_lens import (
     PROFILE_PRESETS,
     RISK_TOLERANCE_LABELS,
     WEIGHTS,
+    Holding,
     Investment,
     InvestorProfile,
     assess,
+    assess_portfolio,
     improvement_hints,
     load_sample_investments,
     rank,
@@ -238,6 +240,66 @@ def show_assessment(profile: InvestorProfile, inv: Investment, weights: dict[str
         )
 
 
+def portfolio_tab(profile: InvestorProfile, samples: list[Investment]) -> None:
+    st.write(
+        "Assess several holdings together. Each holding gets its own fit for its allocation, and portfolio-level "
+        "checks look at the combined picture. The sidebar's single-investment allocation is not used here."
+    )
+    by_id = {s.id: s for s in samples}
+    chosen = st.multiselect(
+        "Holdings",
+        list(by_id),
+        default=["global_equity_index", "ig_corporate_bond_fund", "savings_account"],
+        format_func=lambda i: by_id[i].name,
+        key="port_holdings",
+    )
+    if not chosen:
+        st.info("Select at least one holding.")
+        return
+    cols = st.columns(min(len(chosen), 4))
+    default = round(100 / len(chosen), 1) if len(chosen) > 1 else 100.0
+    holdings = []
+    for n, ident in enumerate(chosen):
+        pct = cols[n % len(cols)].number_input(
+            f"{by_id[ident].name} (%)", 0.0, 100.0, float(default), 1.0, key=f"port_{ident}"
+        )
+        if pct > 0:
+            holdings.append(Holding(by_id[ident], pct))
+    total = sum(h.allocation_pct for h in holdings)
+    if not holdings:
+        st.info("Give at least one holding a positive allocation.")
+        return
+    if total > 100:
+        st.error(f"Allocations add up to {total:g}%. Reduce them to 100% or less.")
+        return
+    pa = assess_portfolio(profile, holdings)
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Combined stress loss", f"{pa.combined_stress_loss_pct:.1f}%", help="If all holdings fell together.")
+    m2.metric("Loss capacity", f"{profile.loss_capacity_pct:g}%")
+    m3.metric(
+        "Weighted risk level", f"{pa.weighted_risk_level:.1f} / 5", help=f"Your tolerance: {profile.risk_tolerance}/5"
+    )
+    st.write(pa.summary())
+    for fl in pa.flags:
+        {"critical": st.error, "warning": st.warning, "info": st.info}[fl.severity](f"**{fl.title}.** {fl.detail}")
+    if not pa.flags:
+        st.success("No portfolio-level flags for this profile.")
+    rows = [
+        {
+            "Holding": a.investment.name,
+            "Allocation": f"{a.profile.allocation_pct:g}%",
+            "Rating": a.rating,
+            "Fit score": round(a.score),
+        }
+        for a in pa.holdings
+    ]
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.caption(
+        "Combined loss assumes every holding suffers its illustrative severe decline at the same time: a "
+        "conservative simplification, not a forecast. Unallocated weight is treated as cash."
+    )
+
+
 def main() -> None:
     st.title("🔎 Investor Fit Lens")
     st.markdown(
@@ -250,8 +312,8 @@ def main() -> None:
     profile = profile_sidebar()
     weights = weights_sidebar()
     samples = _samples()
-    tab_assess, tab_pair, tab_compare, tab_method = st.tabs(
-        ["Assess an investment", "Side by side", "Compare all samples", "Methodology"]
+    tab_assess, tab_pair, tab_port, tab_compare, tab_method = st.tabs(
+        ["Assess an investment", "Side by side", "Portfolio", "Compare all samples", "Methodology"]
     )
 
     with tab_assess:
@@ -278,6 +340,9 @@ def main() -> None:
             )
             st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
             st.caption("Difference = second minus first. Small score differences are not meaningful.")
+
+    with tab_port:
+        portfolio_tab(profile, samples)
 
     with tab_compare:
         st.caption(sample_data_notice())

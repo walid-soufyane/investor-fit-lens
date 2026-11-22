@@ -99,3 +99,11 @@ def test_side_by_side_tab(app):
     app.selectbox(key="pair_b").select("crypto_asset").run()
     assert not app.exception
     assert len(app.dataframe) >= 2
+
+
+def test_portfolio_tab(app):
+    labels = [m.label for m in app.metric]
+    assert "Combined stress loss" in labels and "Weighted risk level" in labels
+    app.number_input(key="port_global_equity_index").set_value(90.0).run()
+    assert not app.exception
+    assert any("add up to" in e.value for e in app.error)

@@ -58,3 +58,16 @@ def test_portfolio_level_flags():
 def test_invalid_portfolios(holdings):
     with pytest.raises(ValueError):
         assess_portfolio(profile(), holdings)
+
+
+def test_cli_portfolio(capsys):
+    from investor_fit_lens.cli import main
+
+    args = ["portfolio", "--horizon", "15", "--risk", "3", "--loss-capacity", "20", "--liquidity", "low"]
+    assert main([*args, "--holding", "global_equity_index=30", "--holding", "short_gov_bond_fund=50"]) == 0
+    out = capsys.readouterr().out
+    assert "20% treated as cash" in out and "Global equity index fund" in out
+    assert main([*args, "--holding", "nope=10"]) == 2
+    assert main([*args, "--holding", "savings_account=abc"]) == 2
+    assert main([*args, "--holding", "savings_account=80", "--holding", "balanced_fund=40"]) == 2
+    assert main(["portfolio", "--risk", "9", "--holding", "savings_account=10"]) == 2

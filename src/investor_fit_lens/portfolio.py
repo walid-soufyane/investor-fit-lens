@@ -47,8 +47,9 @@ class PortfolioAssessment:
             f"{len(self.holdings)} holdings covering {self.total_allocation_pct:g}% of the portfolio"
             + (f" ({100 - self.total_allocation_pct:g}% treated as cash)." if self.total_allocation_pct < 100 else "."),
             f"If every holding suffered its illustrative severe decline at once, the portfolio would fall about "
-            f"{self.combined_stress_loss_pct:.1f}%, vs. a {p.loss_capacity_pct:g}% loss capacity.",
-            f"Allocation-weighted risk level {self.weighted_risk_level:.1f}/5 vs. a tolerance of {p.risk_tolerance}/5.",
+            f"{self.combined_stress_loss_pct:.1f}%, vs. your loss capacity of {p.loss_capacity_pct:g}%.",
+            f"Allocation-weighted risk level {self.weighted_risk_level:.1f}/5 "
+            f"vs. your tolerance of {p.risk_tolerance}/5.",
         ]
         weak = [a.investment.name for a in self.holdings if a.rating in ("Weak fit", "Poor fit")]
         if weak:

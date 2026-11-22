@@ -7,7 +7,16 @@ import json
 import sys
 from dataclasses import asdict
 
-from . import DISCLAIMER, InvestorProfile, assess, load_investments, load_sample_investments, rank
+from . import (
+    DISCLAIMER,
+    Holding,
+    InvestorProfile,
+    assess,
+    assess_portfolio,
+    load_investments,
+    load_sample_investments,
+    rank,
+)
 
 
 def format_assessment(a) -> str:
@@ -24,26 +33,39 @@ def format_assessment(a) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="investor-fit-lens", description="Profile-relative suitability demo")
     sub = parser.add_subparsers(dest="command", required=True)
-    demo = sub.add_parser("demo", help="assess sample investments for a profile")
-    demo.add_argument("--horizon", type=float, default=2)
-    demo.add_argument("--risk", type=int, default=2)
-    demo.add_argument("--loss-capacity", type=float, default=10)
-    demo.add_argument("--liquidity", default="medium", choices=["high", "medium", "low"])
-    demo.add_argument("--goal", default="income")
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--horizon", type=float, default=2)
+    common.add_argument("--risk", type=int, default=2)
+    common.add_argument("--loss-capacity", type=float, default=10)
+    common.add_argument("--liquidity", default="medium", choices=["high", "medium", "low"])
+    common.add_argument("--goal", default="income")
+    common.add_argument("--file", help="JSON file of your own investments (same schema as the bundled samples)")
+    demo = sub.add_parser("demo", parents=[common], help="assess sample investments for a profile")
     demo.add_argument("--allocation", type=float, default=20)
     demo.add_argument("--investment", help="investment id to assess in detail (default: rank all)")
     demo.add_argument("--json", action="store_true", help="print machine-readable JSON instead of text")
-    demo.add_argument("--file", help="JSON file of your own investments (same schema as the bundled samples)")
+    port = sub.add_parser("portfolio", parents=[common], help="assess several holdings together")
+    port.add_argument(
+        "--holding",
+        action="append",
+        required=True,
+        metavar="ID=PCT",
+        help="investment id and its %% of the portfolio, e.g. --holding global_equity_index=40 (repeatable)",
+    )
     args = parser.parse_args(argv)
 
-    profile = InvestorProfile(
-        horizon_years=args.horizon,
-        risk_tolerance=args.risk,
-        loss_capacity_pct=args.loss_capacity,
-        liquidity_need=args.liquidity,
-        goal=args.goal,
-        allocation_pct=args.allocation,
-    )
+    try:
+        profile = InvestorProfile(
+            horizon_years=args.horizon,
+            risk_tolerance=args.risk,
+            loss_capacity_pct=args.loss_capacity,
+            liquidity_need=args.liquidity,
+            goal=args.goal,
+            allocation_pct=getattr(args, "allocation", 10.0),
+        )
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
     if args.file:
         try:
             samples = load_investments(args.file)
@@ -55,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
         samples = load_sample_investments()
         source = "illustrative sample data"
     by_id = {s.id: s for s in samples}
+    if args.command == "portfolio":
+        return _portfolio(profile, by_id, args.holding, source)
     if args.investment and args.investment not in by_id:
         print(f"Unknown investment id. Choose from: {', '.join(by_id)}", file=sys.stderr)
         return 2
@@ -74,6 +98,35 @@ def main(argv: list[str] | None = None) -> int:
     else:
         for a in rank(profile, samples):
             print(f"  {a.rating:<12} {a.score:5.0f}  {a.investment.name}")
+    print(f"\n{DISCLAIMER}")
+    return 0
+
+
+def _portfolio(profile, by_id, specs: list[str], source: str) -> int:
+    holdings = []
+    for spec in specs:
+        ident, _, pct = spec.partition("=")
+        if ident not in by_id:
+            print(f"Unknown investment id {ident!r}. Choose from: {', '.join(by_id)}", file=sys.stderr)
+            return 2
+        try:
+            holdings.append(Holding(by_id[ident], float(pct)))
+        except ValueError:
+            print(f"Invalid holding {spec!r}; expected ID=PCT", file=sys.stderr)
+            return 2
+    try:
+        pa = assess_portfolio(profile, holdings)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    print(f"({source}; educational use only.)\n")
+    print(pa.summary(), "\n")
+    for a in pa.holdings:
+        print(f"  {a.profile.allocation_pct:5.1f}%  {a.rating:<12} {a.score:5.0f}  {a.investment.name}")
+    if pa.flags:
+        print("\nPortfolio flags:")
+        for fl in pa.flags:
+            print(f"  [{fl.severity.upper()}] {fl.title}: {fl.detail}")
     print(f"\n{DISCLAIMER}")
     return 0
 

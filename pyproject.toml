@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "investor-fit-lens"
+version = "0.1.0"
+description = "Transparent, profile-relative investment suitability analyzer (educational decision-support tool)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Walid Soufyane" }]
+keywords = ["investment suitability", "risk profiling", "personal finance", "streamlit", "education"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+# The scoring engine itself has no third-party dependencies; these are for the Streamlit app.
+dependencies = ["streamlit>=1.32", "pandas>=2.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[project.scripts]
+investor-fit-lens = "investor_fit_lens.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/walid-soufyane/investor-fit-lens"
+Issues = "https://github.com/walid-soufyane/investor-fit-lens/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+investor_fit_lens = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

@@ -1,0 +1,59 @@
+"""Text demo: ``investor-fit-lens demo`` or ``python -m investor_fit_lens demo``."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+from . import DISCLAIMER, InvestorProfile, assess, load_sample_investments, rank
+
+
+def format_assessment(a) -> str:
+    lines = [f"{a.investment.name}: {a.rating} (fit score {a.score:.0f}/100)", f"  {a.summary()}", "  Factors:"]
+    for f in a.factors:
+        lines.append(f"    {f.label:<15} {f.score:5.0f}  x{f.weight:.2f}  {f.explanation}")
+    if a.flags:
+        lines.append("  Flags:")
+        for fl in a.flags:
+            lines.append(f"    [{fl.severity.upper()}] {fl.title}: {fl.detail}")
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="investor-fit-lens", description="Profile-relative suitability demo")
+    sub = parser.add_subparsers(dest="command", required=True)
+    demo = sub.add_parser("demo", help="assess sample investments for a profile")
+    demo.add_argument("--horizon", type=float, default=2)
+    demo.add_argument("--risk", type=int, default=2)
+    demo.add_argument("--loss-capacity", type=float, default=10)
+    demo.add_argument("--liquidity", default="medium", choices=["high", "medium", "low"])
+    demo.add_argument("--goal", default="income")
+    demo.add_argument("--allocation", type=float, default=20)
+    demo.add_argument("--investment", help="sample id to assess in detail (default: rank all)")
+    args = parser.parse_args(argv)
+
+    profile = InvestorProfile(
+        horizon_years=args.horizon,
+        risk_tolerance=args.risk,
+        loss_capacity_pct=args.loss_capacity,
+        liquidity_need=args.liquidity,
+        goal=args.goal,
+        allocation_pct=args.allocation,
+    )
+    samples = load_sample_investments()
+    print(f"Profile: {profile}\n(Illustrative sample data; educational use only.)\n")
+    if args.investment:
+        by_id = {s.id: s for s in samples}
+        if args.investment not in by_id:
+            print(f"Unknown investment id. Choose from: {', '.join(by_id)}", file=sys.stderr)
+            return 2
+        print(format_assessment(assess(profile, by_id[args.investment])))
+    else:
+        for a in rank(profile, samples):
+            print(f"  {a.rating:<12} {a.score:5.0f}  {a.investment.name}")
+    print(f"\n{DISCLAIMER}")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    sys.exit(main())

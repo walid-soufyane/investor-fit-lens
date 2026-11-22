@@ -13,7 +13,7 @@ from .profile import (
     InvestorProfile,
     preset_profile,
 )
-from .scoring import WEIGHTS, FactorResult, FitAssessment, Flag, assess, rank, rating_for_score
+from .scoring import WEIGHTS, FactorResult, FitAssessment, Flag, assess, improvement_hints, rank, rating_for_score
 
 __version__ = "0.1.0"
 
@@ -38,6 +38,7 @@ __all__ = [
     "InvestorProfile",
     "__version__",
     "assess",
+    "improvement_hints",
     "load_sample_investments",
     "preset_profile",
     "rank",

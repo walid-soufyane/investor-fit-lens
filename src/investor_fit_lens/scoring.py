@@ -369,3 +369,33 @@ def rank(profile: InvestorProfile, investments: list[Investment]) -> list[FitAss
     """Assess every investment and sort by rating, then score (best first)."""
     results = [assess(profile, inv) for inv in investments]
     return sorted(results, key=lambda a: (RATINGS.index(a.rating), a.score), reverse=True)
+
+
+def improvement_hints(a: FitAssessment) -> list[str]:
+    """Concrete profile or position changes that would remove each mismatch.
+
+    These describe what the *rules* respond to. They are not suggestions that
+    the investor should change their circumstances to fit a product.
+    """
+    p, inv = a.profile, a.investment
+    hints: list[str] = []
+    if inv.max_suggested_holding_years is not None and p.horizon_years > inv.max_suggested_holding_years:
+        hints.append("This product is built for short holding periods; a long horizon will not fit it.")
+    elif inv.min_horizon_years > p.horizon_years:
+        hints.append(f"A horizon of at least {inv.min_horizon_years:g} years would remove the horizon concern.")
+    if inv.risk_level > p.risk_tolerance:
+        hints.append(f"The risk factor clears only with a risk tolerance of {inv.risk_level}/5 or higher.")
+    if a.portfolio_stress_loss_pct > p.loss_capacity_pct:
+        hints.append(
+            f"Reducing the allocation to about {a.max_allocation_within_loss_capacity_pct:.1f}% or less would keep "
+            "the illustrative stress loss within your loss capacity."
+        )
+    if p.liquidity_need == "high" and inv.liquidity != "high":
+        hints.append("If this money may be needed within 12 months, a more liquid investment fits that need better.")
+    if inv.goal_fit[p.goal] < 40:
+        hints.append("This investment is rarely used for your stated goal; one closer to that goal would fit better.")
+    if not inv.diversified and p.allocation_pct > 10:
+        hints.append(
+            "Keeping a single, undiversified holding at or below 10% of the portfolio avoids the concentration flag."
+        )
+    return hints

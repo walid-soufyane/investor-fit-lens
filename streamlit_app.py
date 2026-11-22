@@ -19,6 +19,7 @@ from investor_fit_lens import (
     Investment,
     InvestorProfile,
     assess,
+    improvement_hints,
     load_sample_investments,
     rank,
     sample_data_notice,
@@ -180,6 +181,11 @@ def show_assessment(profile: InvestorProfile, inv: Investment) -> None:
         f"Keeping the allocation at or below **{a.max_allocation_within_loss_capacity_pct:.0f}%** would keep that "
         f"illustrative loss within the {profile.loss_capacity_pct:g}% you said you could absorb."
     )
+    hints = improvement_hints(a)
+    if hints:
+        st.markdown("**What the rules respond to:**")
+        st.markdown("\n".join(f"- {h}" for h in hints))
+        st.caption("These explain the scoring, not advice to change your situation to suit a product.")
     with st.expander("Factor details as a table"):
         st.dataframe(pd.DataFrame(factor_rows(a)), hide_index=True, use_container_width=True)
 

@@ -239,3 +239,9 @@ def test_markdown_report_contents(samples):
     assert "| Liquidity needs | 0 |" in md
     assert "CRITICAL: Money may be locked" in md
     assert "illustrative sample" in md and "not provide personalized financial" in md
+
+
+def test_rank_passes_custom_weights(samples):
+    goal_only = {k: (1.0 if k == "goal" else 0.0) for k in WEIGHTS}
+    ranked = rank(make_profile(goal="speculation"), list(samples.values()), weights=goal_only)
+    assert ranked[0].score == max(s.goal_fit["speculation"] for s in samples.values())

@@ -16,6 +16,7 @@ from investor_fit_lens import (
     LIQUIDITY_NEED_LABELS,
     PROFILE_PRESETS,
     RISK_TOLERANCE_LABELS,
+    WEIGHTS,
     Investment,
     InvestorProfile,
     assess,
@@ -31,6 +32,7 @@ from investor_fit_lens.presentation import (
     factor_rows,
     rating_badge_html,
 )
+from investor_fit_lens.scoring import FACTOR_LABELS
 
 CUSTOM_ID = "__custom__"
 
@@ -118,6 +120,19 @@ def profile_sidebar() -> InvestorProfile:
     )
 
 
+def weights_sidebar() -> dict[str, float]:
+    with st.sidebar.expander("Advanced: factor weights"):
+        st.caption(
+            "Default weights are teaching defaults, not calibrated values. Adjust them to see how much the "
+            "result depends on them. Weights are normalized to sum to 100%."
+        )
+        raw = {k: st.slider(FACTOR_LABELS[k], 0, 50, int(round(w * 100)), 5, key=f"w_{k}") for k, w in WEIGHTS.items()}
+    if sum(raw.values()) == 0:
+        st.sidebar.warning("All weights are zero; using the defaults.")
+        return dict(WEIGHTS)
+    return {k: float(v) for k, v in raw.items()}
+
+
 def custom_investment_form() -> Investment:
     st.caption("Describe the investment with your own assumptions. Nothing is looked up or verified.")
     c1, c2, c3 = st.columns(3)
@@ -150,8 +165,10 @@ def custom_investment_form() -> Investment:
     )
 
 
-def show_assessment(profile: InvestorProfile, inv: Investment) -> None:
-    a = assess(profile, inv)
+def show_assessment(profile: InvestorProfile, inv: Investment, weights: dict[str, float]) -> None:
+    a = assess(profile, inv, weights=weights)
+    if any(abs(f.weight - WEIGHTS[f.key]) > 1e-9 for f in a.factors):
+        st.caption("Using custom factor weights (see the sidebar).")
     left, right = st.columns([2, 1])
     with left:
         st.markdown(rating_badge_html(a.rating), unsafe_allow_html=True)
@@ -230,6 +247,7 @@ def main() -> None:
     st.info(DISCLAIMER, icon="ℹ️")
 
     profile = profile_sidebar()
+    weights = weights_sidebar()
     samples = _samples()
     tab_assess, tab_compare, tab_method = st.tabs(["Assess an investment", "Compare all samples", "Methodology"])
 
@@ -241,12 +259,12 @@ def main() -> None:
         choice = st.selectbox("Investment", options, index=5, format_func=names.get, key="investment")
         inv = custom_investment_form() if choice == CUSTOM_ID else next(s for s in samples if s.id == choice)
         st.divider()
-        show_assessment(profile, inv)
+        show_assessment(profile, inv, weights)
 
     with tab_compare:
         st.caption(sample_data_notice())
         st.write("All sample investments assessed against the current profile, sorted by rating and score.")
-        df = pd.DataFrame(comparison_rows(rank(profile, samples)))
+        df = pd.DataFrame(comparison_rows(rank(profile, samples, weights=weights)))
         st.dataframe(df, hide_index=True, use_container_width=True)
 
     with tab_method:

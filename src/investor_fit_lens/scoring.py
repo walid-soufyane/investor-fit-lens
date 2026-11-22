@@ -365,9 +365,11 @@ def assess(profile: InvestorProfile, inv: Investment, weights: dict[str, float] 
     )
 
 
-def rank(profile: InvestorProfile, investments: list[Investment]) -> list[FitAssessment]:
+def rank(
+    profile: InvestorProfile, investments: list[Investment], weights: dict[str, float] | None = None
+) -> list[FitAssessment]:
     """Assess every investment and sort by rating, then score (best first)."""
-    results = [assess(profile, inv) for inv in investments]
+    results = [assess(profile, inv, weights=weights) for inv in investments]
     return sorted(results, key=lambda a: (RATINGS.index(a.rating), a.score), reverse=True)
 
 

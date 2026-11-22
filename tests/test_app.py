@@ -76,3 +76,13 @@ def test_preset_fills_profile(app):
     assert app.radio(key="liquidity").value == "high"
     assert app.selectbox(key="goal").value == "preservation"
     assert app.slider(key="horizon").value == 2.0
+
+
+def test_custom_weights_change_score(app):
+    before = app.metric[0].value
+    for key in ("w_horizon", "w_risk", "w_loss", "w_liquidity"):
+        app.slider(key=key).set_value(0)
+    app.slider(key="w_goal").set_value(50).run()
+    assert not app.exception
+    assert app.metric[0].value == "95 / 100"  # global equity index, growth goal fit = 95
+    assert app.metric[0].value != before

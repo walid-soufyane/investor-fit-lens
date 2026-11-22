@@ -100,6 +100,26 @@ class FitAssessment:
     def is_capped(self) -> bool:
         return self.rating != self.score_rating
 
+    def to_dict(self) -> dict:
+        """JSON-serializable representation of the assessment."""
+        return {
+            "investment_id": self.investment.id,
+            "investment_name": self.investment.name,
+            "illustrative_data": self.investment.illustrative,
+            "rating": self.rating,
+            "score": self.score,
+            "score_rating": self.score_rating,
+            "capped": self.is_capped,
+            "summary": self.summary(),
+            "factors": [
+                {"key": f.key, "label": f.label, "score": f.score, "weight": round(f.weight, 4), "why": f.explanation}
+                for f in self.factors
+            ],
+            "flags": [{"severity": f.severity, "title": f.title, "detail": f.detail, "cap": f.cap} for f in self.flags],
+            "portfolio_stress_loss_pct": round(self.portfolio_stress_loss_pct, 4),
+            "max_allocation_within_loss_capacity_pct": round(self.max_allocation_within_loss_capacity_pct, 4),
+        }
+
     def summary(self) -> str:
         ordered = sorted(self.factors, key=lambda f: f.score)
         weakest = [f.label.lower() for f in ordered if f.score < 60][:2]

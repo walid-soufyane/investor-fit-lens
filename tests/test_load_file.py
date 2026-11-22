@@ -37,3 +37,15 @@ def test_cli_with_file(capsys, tmp_path):
     bad = tmp_path / "bad.json"
     bad.write_text("{not json")
     assert main(["demo", "--file", str(bad)]) == 2
+
+
+def test_cli_json_output(capsys):
+    assert main(["demo", "--json", "--investment", "term_deposit_1y", "--liquidity", "high"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    (a,) = data["assessments"]
+    assert a["rating"] == "Poor fit" and a["capped"] is True
+    assert {f["key"] for f in a["factors"]} == {"horizon", "risk", "loss", "liquidity", "goal"}
+    assert any(f["cap"] == "Poor fit" for f in a["flags"])
+    assert "not provide personalized financial" in data["disclaimer"]
+    assert main(["demo", "--json"]) == 0
+    assert len(json.loads(capsys.readouterr().out)["assessments"]) == 13

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from dataclasses import asdict
 
 from . import DISCLAIMER, InvestorProfile, assess, load_investments, load_sample_investments, rank
 
@@ -30,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     demo.add_argument("--goal", default="income")
     demo.add_argument("--allocation", type=float, default=20)
     demo.add_argument("--investment", help="investment id to assess in detail (default: rank all)")
+    demo.add_argument("--json", action="store_true", help="print machine-readable JSON instead of text")
     demo.add_argument("--file", help="JSON file of your own investments (same schema as the bundled samples)")
     args = parser.parse_args(argv)
 
@@ -51,12 +54,22 @@ def main(argv: list[str] | None = None) -> int:
     else:
         samples = load_sample_investments()
         source = "illustrative sample data"
+    by_id = {s.id: s for s in samples}
+    if args.investment and args.investment not in by_id:
+        print(f"Unknown investment id. Choose from: {', '.join(by_id)}", file=sys.stderr)
+        return 2
+    if args.json:
+        chosen = [assess(profile, by_id[args.investment])] if args.investment else rank(profile, samples)
+        payload = {
+            "profile": asdict(profile),
+            "data_source": source,
+            "disclaimer": DISCLAIMER,
+            "assessments": [a.to_dict() for a in chosen],
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
     print(f"Profile: {profile}\n({source}; educational use only.)\n")
     if args.investment:
-        by_id = {s.id: s for s in samples}
-        if args.investment not in by_id:
-            print(f"Unknown investment id. Choose from: {', '.join(by_id)}", file=sys.stderr)
-            return 2
         print(format_assessment(assess(profile, by_id[args.investment])))
     else:
         for a in rank(profile, samples):

@@ -17,7 +17,8 @@ It never labels an investment as universally good or bad. The same covered-call 
 
 ## Features
 
-- **Profile inputs:** horizon, risk tolerance (1–5), loss capacity (% of total portfolio), liquidity needs, goal, and allocation size. Four **example profiles** can fill these in for you.
+- **Plain-language questions:** six everyday questions cover horizon, risk tolerance, loss capacity, liquidity needs, goal and allocation size, e.g. "If this investment dropped 20% in a few months, how would you feel?". Four **example people** can fill these in for you.
+- **Verdict first, jargon last:** a clear rating with a one-line meaning, then a ✅ / ⚠️ / ❌ checklist in everyday words. Scores, weights and assumptions sit in a "full breakdown" section.
 - **13 illustrative sample investments:** from a savings account and bond funds to equity index funds, REITs, a single stock, crypto, a private real estate fund with a lock-up, and a 3x leveraged ETF.
 - **"Describe my own investment":** score any product using your own assumptions.
 - **Explained results:** per-factor score bars with a sentence each, colour-coded critical, warning and info flags, and a note when a flag caps the rating.
@@ -60,8 +61,8 @@ To assess products you are considering, copy `examples/my_investments.json` and 
 
 ## Demo walkthrough
 
-1. **Set the profile in the sidebar.** For example: 3-year horizon, risk tolerance 2 (low), loss capacity 10%, medium liquidity needs, goal *regular income*, and 25% of the portfolio for this investment.
-2. **Pick an investment.** Choose *Covered-call equity fund*. The result appears immediately. The CLI prints the same assessment:
+1. **Answer the six questions under "About you"** (or start from an example person). For example: money needed in 3 years; "I'd be uncomfortable, but small dips are okay"; could need it in 1 to 3 years; goal *Pay me regular income*; could lose 10% of total savings; 25% of savings going into this investment.
+2. **Pick an investment.** Choose *Covered-call equity fund*. The result appears immediately as a verdict ("⚠️ Partial fit: it matches you in some ways, but something important doesn't"), followed by a ✅ / ⚠️ / ❌ checklist of reasons in everyday words, things to watch out for, and what would make it a better fit. The technical breakdown is under "See the full breakdown". The CLI prints the same assessment:
 
    ```
    Covered-call equity fund: Partial fit (fit score 74/100)
@@ -81,8 +82,8 @@ To assess products you are considering, copy `examples/my_investments.json` and 
 
    The goal matches, but the product is riskier than this investor said they are comfortable with, and the horizon is short.
 3. **Change one answer.** Set liquidity needs to *High* and pick *1-year term deposit (non-redeemable)*. The deposit has no price risk, yet the rating drops to **Poor fit**. A critical flag explains why: *Money may be locked when you need it.* A high average score can't hide that.
-4. **Open "Compare all samples"** to see every sample ranked for the current profile, with its critical flags and the largest allocation that stays within the loss capacity.
-5. **Open "Methodology"** to see the exact rules behind every number.
+4. **Open "Compare two", "Check a portfolio" or "Rank all examples"** to compare options side by side, check several investments together, or see every example from best to worst match.
+5. **Open "How it works"** to see the exact rules behind every number.
 
 > **Screenshots.** The UI isn't pictured here yet; run `streamlit run streamlit_app.py` to see it. The walkthrough above uses real output from the scoring engine.
 

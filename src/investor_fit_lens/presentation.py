@@ -146,3 +146,114 @@ def side_by_side_rows(a: FitAssessment, b: FitAssessment) -> list[dict]:
         }
     )
     return rows
+
+
+# --------------------------------------------------------------------------
+# Plain-language layer for non-specialist users
+# --------------------------------------------------------------------------
+
+RATING_HEADLINES: dict[str, tuple[str, str]] = {
+    "Good fit": ("✅", "This investment matches your answers well."),
+    "Partial fit": ("⚠️", "It matches you in some ways, but something important doesn't."),
+    "Weak fit": ("🟠", "Several things about it don't match your situation."),
+    "Poor fit": ("❌", "This investment doesn't match your situation."),
+}
+
+PLAIN_RISK_LABELS: dict[int, str] = {
+    1: "I'd be very upset: I can't stand seeing my money go down",
+    2: "I'd be uncomfortable, but small dips are okay",
+    3: "I'd be uneasy, but I'd wait it out",
+    4: "I'd stay calm: ups and downs are part of investing",
+    5: "I'd see it as an opportunity: I accept big swings",
+}
+
+PLAIN_LIQUIDITY_LABELS: dict[str, str] = {
+    "high": "Yes, I might need it within a year",
+    "medium": "Maybe, in 1 to 3 years",
+    "low": "No, not for at least 3 years",
+}
+
+PLAIN_GOAL_LABELS: dict[str, str] = {
+    "preservation": "🛡️ Keep it safe",
+    "income": "💵 Pay me regular income",
+    "balanced": "⚖️ Grow steadily, with some safety",
+    "growth": "📈 Grow as much as possible over the long term",
+    "speculation": "🎲 Take a big chance for a big gain",
+}
+
+_GOAL_PHRASES: dict[str, str] = {
+    "preservation": "keeping money safe",
+    "income": "earning regular income",
+    "balanced": "steady, balanced growth",
+    "growth": "long-term growth",
+    "speculation": "high-risk, high-reward bets",
+}
+
+
+def factor_icon(score: float) -> str:
+    """✅ for scores of 80 and up, ⚠️ for 40-79, ❌ below 40."""
+    if score >= 80:
+        return "✅"
+    if score >= 40:
+        return "⚠️"
+    return "❌"
+
+
+def plain_reasons(a: FitAssessment) -> list[tuple[str, str]]:
+    """One everyday-language sentence per factor, each paired with a status icon."""
+    p, inv = a.profile, a.investment
+    by_key = {f.key: f for f in a.factors}
+    reasons: list[tuple[str, str]] = []
+
+    s = by_key["horizon"].score
+    if inv.max_suggested_holding_years is not None and p.horizon_years > inv.max_suggested_holding_years:
+        text = "It's designed to be held for days or weeks, not the years you plan to stay invested."
+    elif s >= 80:
+        text = "You can leave the money invested long enough for this kind of investment."
+    else:
+        text = (
+            f"This usually needs about {inv.min_horizon_years:g} years to recover from bad periods, "
+            f"but you may need the money in {p.horizon_years:g}."
+        )
+    reasons.append((factor_icon(s), text))
+
+    s = by_key["risk"].score
+    text = (
+        "Its ups and downs are within what you said you're comfortable with."
+        if s >= 80
+        else "Its value can swing more than you said you're comfortable with."
+    )
+    reasons.append((factor_icon(s), text))
+
+    s = by_key["loss"].score
+    loss = a.portfolio_stress_loss_pct
+    if s >= 80:
+        text = (
+            f"Even in a severe crash, the loss (about {loss:.1f}% of your savings) would stay within "
+            f"what you can afford ({p.loss_capacity_pct:g}%)."
+        )
+    else:
+        text = (
+            f"In a severe crash you could lose about {loss:.1f}% of your savings, more than the "
+            f"{p.loss_capacity_pct:g}% you said you can afford."
+        )
+    reasons.append((factor_icon(s), text))
+
+    s = by_key["liquidity"].score
+    text = (
+        "You should be able to get your money out when you need it."
+        if s >= 80
+        else "Your money could be hard or costly to get out when you need it."
+    )
+    reasons.append((factor_icon(s), text))
+
+    s = by_key["goal"].score
+    phrase = _GOAL_PHRASES[p.goal]
+    if s >= 75:
+        text = f"It's commonly used for {phrase}, which is your goal."
+    elif s >= 40:
+        text = f"It can help with {phrase}, but it isn't the most typical choice."
+    else:
+        text = f"It isn't usually used for {phrase}, which is your goal."
+    reasons.append((factor_icon(s), text))
+    return reasons

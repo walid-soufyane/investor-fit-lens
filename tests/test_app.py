@@ -54,6 +54,7 @@ def _all_text(at) -> str:
 def test_app_renders_default_assessment(app):
     text = _all_text(app)
     assert "Investor Fit Lens" in [t.value for t in app.title][0]
+    assert "Why?" in text and "1️⃣ About you" in [h.value for h in app.subheader]
     assert "not provide personalized financial" in text
     assert any(lbl in text for lbl in ("Good fit", "Partial fit", "Weak fit", "Poor fit"))
     assert app.metric[0].label == "Fit score"
@@ -80,7 +81,7 @@ def test_preset_fills_profile(app):
     app.selectbox(key="preset").select("Cautious saver, short horizon").run()
     assert not app.exception
     assert app.radio(key="liquidity").value == "high"
-    assert app.selectbox(key="goal").value == "preservation"
+    assert app.radio(key="goal").value == "preservation"
     assert app.slider(key="horizon").value == 2.0
 
 

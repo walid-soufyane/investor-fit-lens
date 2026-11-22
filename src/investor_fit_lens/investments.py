@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from importlib import resources
+from pathlib import Path
 
 from .profile import GOAL_LABELS
 
@@ -64,6 +65,24 @@ class Investment:
         data = dict(data)
         data["notes"] = tuple(data.get("notes", ()))
         return cls(**data)
+
+
+def load_investments(path: str | Path) -> list[Investment]:
+    """Load investments described in a JSON file using the same schema as the bundled samples.
+
+    The file may be either ``{"investments": [...]}`` or a bare list. Investments
+    loaded this way are marked ``illustrative=False`` unless the file says
+    otherwise, because they carry the user's own assumptions.
+    """
+    payload = json.loads(Path(path).read_text("utf-8"))
+    items = payload["investments"] if isinstance(payload, dict) else payload
+    if not isinstance(items, list) or not items:
+        raise ValueError("expected a non-empty list of investments")
+    investments = [Investment.from_dict({"illustrative": False, **item}) for item in items]
+    ids = [i.id for i in investments]
+    if len(set(ids)) != len(ids):
+        raise ValueError("investment ids must be unique")
+    return investments
 
 
 def load_sample_investments() -> list[Investment]:

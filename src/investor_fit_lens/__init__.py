@@ -4,7 +4,7 @@ Educational decision-support tool. Not personalized financial advice and not a
 prediction of returns.
 """
 
-from .investments import Investment, load_sample_investments, sample_data_notice
+from .investments import Investment, load_investments, load_sample_investments, sample_data_notice
 from .profile import (
     GOAL_LABELS,
     LIQUIDITY_NEED_LABELS,
@@ -39,6 +39,7 @@ __all__ = [
     "__version__",
     "assess",
     "improvement_hints",
+    "load_investments",
     "load_sample_investments",
     "preset_profile",
     "rank",

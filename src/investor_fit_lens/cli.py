@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import DISCLAIMER, InvestorProfile, assess, load_sample_investments, rank
+from . import DISCLAIMER, InvestorProfile, assess, load_investments, load_sample_investments, rank
 
 
 def format_assessment(a) -> str:
@@ -29,7 +29,8 @@ def main(argv: list[str] | None = None) -> int:
     demo.add_argument("--liquidity", default="medium", choices=["high", "medium", "low"])
     demo.add_argument("--goal", default="income")
     demo.add_argument("--allocation", type=float, default=20)
-    demo.add_argument("--investment", help="sample id to assess in detail (default: rank all)")
+    demo.add_argument("--investment", help="investment id to assess in detail (default: rank all)")
+    demo.add_argument("--file", help="JSON file of your own investments (same schema as the bundled samples)")
     args = parser.parse_args(argv)
 
     profile = InvestorProfile(
@@ -40,8 +41,17 @@ def main(argv: list[str] | None = None) -> int:
         goal=args.goal,
         allocation_pct=args.allocation,
     )
-    samples = load_sample_investments()
-    print(f"Profile: {profile}\n(Illustrative sample data; educational use only.)\n")
+    if args.file:
+        try:
+            samples = load_investments(args.file)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            print(f"Could not load {args.file}: {exc}", file=sys.stderr)
+            return 2
+        source = f"investments from {args.file} (your own assumptions)"
+    else:
+        samples = load_sample_investments()
+        source = "illustrative sample data"
+    print(f"Profile: {profile}\n({source}; educational use only.)\n")
     if args.investment:
         by_id = {s.id: s for s in samples}
         if args.investment not in by_id:

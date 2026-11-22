@@ -1,0 +1,18 @@
+{
+  "investments": [
+    {
+      "id": "example_target_date_fund",
+      "name": "Example: target-date retirement fund",
+      "category": "Multi-asset",
+      "description": "Template entry. Replace every value with your own assumptions about the product you are considering.",
+      "risk_level": 3,
+      "stress_drawdown_pct": 35,
+      "liquidity": "high",
+      "min_horizon_years": 10,
+      "goal_fit": {"preservation": 20, "income": 40, "balanced": 85, "growth": 80, "speculation": 5},
+      "complexity": "low",
+      "diversified": true,
+      "notes": ["Template values for illustration only."]
+    }
+  ]
+}

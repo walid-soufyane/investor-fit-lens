@@ -59,6 +59,22 @@ Other warnings, such as a horizon somewhat below the minimum, a loss up to 2× c
 
 The app also reports the **largest allocation** that would keep the illustrative stress loss within your loss capacity.
 
+### Portfolio mode
+
+Portfolio mode assesses several holdings against one profile:
+
+1. **Each holding** is assessed with the rules above, using its own allocation.
+2. **Portfolio-level checks** are added on top:
+
+| Check | How it is computed | Flag |
+|---|---|---|
+| Combined stress loss | Σ (illustrative severe decline × allocation) | Warning above loss capacity; critical above 2× |
+| Weighted risk level | Allocation-weighted risk level, with unallocated weight counted as cash (level 1) | Warning above risk tolerance |
+| Locked money | Share of the portfolio in low-liquidity investments | Critical if liquidity needs are high; warning above 50% if they are medium |
+| Concentration | Undiversified single holdings | Warning above 25% |
+
+The combined stress loss assumes **every holding suffers its severe decline at the same time**. This is a deliberately conservative simplification. Real assets are not perfectly correlated, although correlations tend to rise in crises. Portfolio mode doesn't produce a single portfolio score, because averaging holding scores would hide the interactions the checks are meant to show.
+
 ### How to read the score
 
 - It is an **ordinal summary of rule-based judgements**, not a probability, a quality grade, or a forecast. Differences of a few points are not meaningful.

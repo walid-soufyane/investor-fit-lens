@@ -25,6 +25,7 @@ It never labels an investment as universally good or bad. The same covered-call 
 - **Downloadable report:** a Markdown file with the profile, factors, flags and disclaimer.
 - **Adjustable factor weights:** an advanced sidebar option for seeing how much a result depends on the default weights.
 - **Side-by-side tab:** compare two investments factor by factor.
+- **Portfolio tab:** assess several holdings together, with combined stress loss vs. loss capacity, weighted risk vs. tolerance, locked-money and concentration checks, and each holding's own fit.
 - **Compare tab:** every sample ranked against the current profile.
 - **Methodology tab:** the full scoring rules, inside the app.
 - **Accessible ratings:** each rating has its own symbol and an accessible label, so it never relies on colour alone.
@@ -51,6 +52,8 @@ investor-fit-lens demo --horizon 1 --liquidity high \
     --investment private_real_estate_fund                  # detailed assessment of one sample
 investor-fit-lens demo --json                             # machine-readable output
 investor-fit-lens demo --file examples/my_investments.json # assess your own investments
+investor-fit-lens portfolio --horizon 15 --risk 3 --loss-capacity 20 --liquidity low \
+    --holding global_equity_index=30 --holding short_gov_bond_fund=50   # several holdings together
 ```
 
 To assess products you are considering, copy `examples/my_investments.json` and replace the template values with your own assumptions. The file uses the same schema as the bundled samples. Investments loaded from it are labelled as your assumptions, not as samples.
@@ -104,7 +107,7 @@ Full rules, caps and rationale: **[docs/METHODOLOGY.md](docs/METHODOLOGY.md)**.
 ## Limitations
 
 - The sample data is illustrative. The figures are round-number assumptions about generic investment types, not live, current or product-specific data.
-- It looks at one position at a time. It doesn't model correlations, your other holdings, taxes, fees, inflation or income stability.
+- Single-investment mode looks at one position at a time. Portfolio mode adds combined checks but assumes everything falls together rather than modelling correlations. Neither covers taxes, fees, inflation or income stability.
 - The profile is self-reported and unverified, and there is no full risk questionnaire.
 - The weights and thresholds are sensible teaching defaults, not values calibrated against investor outcomes.
 - It is not regulatory suitability, KYC, or personalized advice.
@@ -117,6 +120,7 @@ src/investor_fit_lens/
   profile.py                     InvestorProfile + validation
   investments.py                 Investment model + sample loader
   scoring.py                     Factor rules, weights, rating caps, assess() / rank()
+  portfolio.py                   assess_portfolio(): holdings + portfolio-level checks
   presentation.py                UI-independent tables, badge and Markdown report
   cli.py                         `investor-fit-lens demo` (text or --json, samples or --file)
   data/sample_investments.json   Illustrative sample investments
@@ -139,7 +143,7 @@ print(result.rating, result.score)
 print(result.summary())
 ```
 
-Other building blocks: `preset_profile()`, `improvement_hints()`, `rank()`, `load_investments()`, `FitAssessment.to_dict()`, and `presentation.assessment_markdown()`.
+Other building blocks: `assess_portfolio()` with `Holding`, `preset_profile()`, `improvement_hints()`, `rank()`, `load_investments()`, `FitAssessment.to_dict()`, and `presentation.assessment_markdown()`.
 
 ## Running the tests
 

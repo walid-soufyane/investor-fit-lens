@@ -11,6 +11,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest
 streamlit run streamlit_app.py
+pip install pre-commit && pre-commit install   # optional: lint/format automatically on commit
 ```
 
 ## Guidelines

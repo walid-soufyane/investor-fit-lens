@@ -16,7 +16,7 @@ from .profile import (
 )
 from .scoring import WEIGHTS, FactorResult, FitAssessment, Flag, assess, improvement_hints, rank, rating_for_score
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 DISCLAIMER = (
     "Educational decision-support tool only. It does not provide personalized financial, investment, "

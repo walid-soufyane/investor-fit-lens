@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 (2026-11-22)
+
+### Added
+- Portfolio mode: `assess_portfolio()` with `Holding`, a "Portfolio" tab in the app, and an `investor-fit-lens portfolio` CLI command. It checks combined stress loss, weighted risk, locked money and concentration, alongside each holding's own fit.
+- Methodology and README sections for portfolio mode.
+
 ## 0.2.0 (2026-11-22)
 
 ### Added

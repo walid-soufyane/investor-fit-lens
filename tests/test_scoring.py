@@ -245,3 +245,16 @@ def test_rank_passes_custom_weights(samples):
     goal_only = {k: (1.0 if k == "goal" else 0.0) for k in WEIGHTS}
     ranked = rank(make_profile(goal="speculation"), list(samples.values()), weights=goal_only)
     assert ranked[0].score == max(s.goal_fit["speculation"] for s in samples.values())
+
+
+def test_side_by_side_rows(samples):
+    from investor_fit_lens.presentation import side_by_side_rows
+
+    p = make_profile()
+    a, b = assess(p, samples["savings_account"]), assess(p, samples["balanced_fund"])
+    rows = side_by_side_rows(a, b)
+    assert [r[""] for r in rows][:3] == ["Rating", "Fit score", "Time horizon"]
+    assert len(rows) == 2 + 5 + 1
+    assert rows[1]["Difference"] == f"{b.score - a.score:+.0f}"
+    with pytest.raises(ValueError):
+        side_by_side_rows(a, assess(make_profile(goal="growth"), samples["balanced_fund"]))

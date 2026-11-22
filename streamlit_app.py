@@ -31,6 +31,7 @@ from investor_fit_lens.presentation import (
     comparison_rows,
     factor_rows,
     rating_badge_html,
+    side_by_side_rows,
 )
 from investor_fit_lens.scoring import FACTOR_LABELS
 
@@ -249,7 +250,9 @@ def main() -> None:
     profile = profile_sidebar()
     weights = weights_sidebar()
     samples = _samples()
-    tab_assess, tab_compare, tab_method = st.tabs(["Assess an investment", "Compare all samples", "Methodology"])
+    tab_assess, tab_pair, tab_compare, tab_method = st.tabs(
+        ["Assess an investment", "Side by side", "Compare all samples", "Methodology"]
+    )
 
     with tab_assess:
         options = [s.id for s in samples] + [CUSTOM_ID]
@@ -260,6 +263,21 @@ def main() -> None:
         inv = custom_investment_form() if choice == CUSTOM_ID else next(s for s in samples if s.id == choice)
         st.divider()
         show_assessment(profile, inv, weights)
+
+    with tab_pair:
+        st.write("Compare two sample investments factor by factor for the current profile.")
+        by_id = {s.id: s for s in samples}
+        c1, c2 = st.columns(2)
+        first = c1.selectbox("First", list(by_id), index=0, format_func=lambda i: by_id[i].name, key="pair_a")
+        second = c2.selectbox("Second", list(by_id), index=4, format_func=lambda i: by_id[i].name, key="pair_b")
+        if first == second:
+            st.info("Pick two different investments to compare.")
+        else:
+            rows = side_by_side_rows(
+                assess(profile, by_id[first], weights=weights), assess(profile, by_id[second], weights=weights)
+            )
+            st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+            st.caption("Difference = second minus first. Small score differences are not meaningful.")
 
     with tab_compare:
         st.caption(sample_data_notice())

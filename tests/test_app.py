@@ -86,3 +86,10 @@ def test_custom_weights_change_score(app):
     assert not app.exception
     assert app.metric[0].value == "95 / 100"  # global equity index, growth goal fit = 95
     assert app.metric[0].value != before
+
+
+def test_side_by_side_tab(app):
+    app.selectbox(key="pair_a").select("savings_account")
+    app.selectbox(key="pair_b").select("crypto_asset").run()
+    assert not app.exception
+    assert len(app.dataframe) >= 2

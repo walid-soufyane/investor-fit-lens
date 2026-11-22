@@ -101,3 +101,42 @@ def assessment_markdown(a: FitAssessment) -> str:
     source = "illustrative sample (not live or current data)" if inv.illustrative else "user-entered assumptions"
     lines += ["", "---", f"Investment data: {source}.", "", f"*{DISCLAIMER}*", ""]
     return "\n".join(lines)
+
+
+def _flag_counts(a: FitAssessment) -> str:
+    critical = sum(f.severity == "critical" for f in a.flags)
+    warnings = sum(f.severity == "warning" for f in a.flags)
+    return f"{critical} / {warnings}"
+
+
+def side_by_side_rows(a: FitAssessment, b: FitAssessment) -> list[dict]:
+    """Factor-by-factor comparison of two assessments for the same profile."""
+    if a.profile != b.profile:
+        raise ValueError("side-by-side comparison requires assessments of the same profile")
+    rows = [{"": "Rating", a.investment.name: a.rating, b.investment.name: b.rating, "Difference": ""}]
+    rows.append(
+        {
+            "": "Fit score",
+            a.investment.name: f"{a.score:.0f}",
+            b.investment.name: f"{b.score:.0f}",
+            "Difference": f"{b.score - a.score:+.0f}",
+        }
+    )
+    for fa, fb in zip(a.factors, b.factors, strict=True):
+        rows.append(
+            {
+                "": fa.label,
+                a.investment.name: f"{fa.score:.0f}",
+                b.investment.name: f"{fb.score:.0f}",
+                "Difference": f"{fb.score - fa.score:+.0f}",
+            }
+        )
+    rows.append(
+        {
+            "": "Critical / warning flags",
+            a.investment.name: _flag_counts(a),
+            b.investment.name: _flag_counts(b),
+            "Difference": "",
+        }
+    )
+    return rows

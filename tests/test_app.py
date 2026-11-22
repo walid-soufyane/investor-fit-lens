@@ -27,7 +27,13 @@ def test_presentation_helpers():
     ]
     table = comparison_rows(rank(p, samples))
     assert len(table) == len(samples) and {"Rating", "Fit score", "Critical flags"} <= set(table[0])
-    assert "Good fit" in rating_badge_html("Good fit")
+    badge = rating_badge_html("Good fit")
+    assert "Good fit" in badge and 'aria-label="Rating: Good fit"' in badge and "✓" in badge
+    # every rating has a distinct symbol, so meaning never depends on colour alone
+    from investor_fit_lens.presentation import RATING_SYMBOLS
+    from investor_fit_lens.scoring import RATINGS
+
+    assert set(RATING_SYMBOLS) == set(RATINGS) and len(set(RATING_SYMBOLS.values())) == len(RATINGS)
 
 
 @pytest.fixture

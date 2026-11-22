@@ -50,11 +50,17 @@ def comparison_rows(results: list[FitAssessment]) -> list[dict]:
     return rows
 
 
+# A symbol per rating so the result is never conveyed by colour alone.
+RATING_SYMBOLS: dict[str, str] = {"Good fit": "✓", "Partial fit": "◐", "Weak fit": "!", "Poor fit": "✕"}
+
+
 def rating_badge_html(rating: str) -> str:
     color = RATING_COLORS.get(rating, "#57606a")
+    symbol = RATING_SYMBOLS.get(rating, "")
     return (
-        f'<span style="background:{color};color:white;padding:0.35rem 0.9rem;border-radius:999px;'
-        f'font-weight:600;font-size:1.05rem;">{rating}</span>'
+        f'<span role="status" aria-label="Rating: {rating}" style="background:{color};color:white;'
+        f'padding:0.35rem 0.9rem;border-radius:999px;font-weight:600;font-size:1.05rem;">'
+        f'<span aria-hidden="true">{symbol}</span> {rating}</span>'
     )
 
 

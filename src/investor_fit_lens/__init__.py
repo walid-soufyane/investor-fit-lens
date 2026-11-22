@@ -5,6 +5,7 @@ prediction of returns.
 """
 
 from .investments import Investment, load_investments, load_sample_investments, sample_data_notice
+from .portfolio import Holding, PortfolioAssessment, assess_portfolio
 from .profile import (
     GOAL_LABELS,
     LIQUIDITY_NEED_LABELS,
@@ -34,10 +35,13 @@ __all__ = [
     "FactorResult",
     "FitAssessment",
     "Flag",
+    "Holding",
     "Investment",
     "InvestorProfile",
+    "PortfolioAssessment",
     "__version__",
     "assess",
+    "assess_portfolio",
     "improvement_hints",
     "load_investments",
     "load_sample_investments",

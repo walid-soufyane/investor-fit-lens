@@ -56,3 +56,48 @@ def rating_badge_html(rating: str) -> str:
         f'<span style="background:{color};color:white;padding:0.35rem 0.9rem;border-radius:999px;'
         f'font-weight:600;font-size:1.05rem;">{rating}</span>'
     )
+
+
+def assessment_markdown(a: FitAssessment) -> str:
+    """A self-contained Markdown report of one assessment, suitable for download or sharing."""
+    from . import DISCLAIMER
+    from .profile import GOAL_LABELS, LIQUIDITY_NEED_LABELS, RISK_TOLERANCE_LABELS
+    from .scoring import improvement_hints
+
+    p, inv = a.profile, a.investment
+    lines = [
+        f"# Investor Fit Lens report: {inv.name}",
+        "",
+        f"**Rating:** {a.rating}  ",
+        f"**Fit score:** {a.score:.0f} / 100 (ordinal summary; not a probability or a return forecast)",
+        "",
+        a.summary(),
+        "",
+        "## Profile entered",
+        "",
+        f"- Horizon: {p.horizon_years:g} years",
+        f"- Risk tolerance: {RISK_TOLERANCE_LABELS[p.risk_tolerance]}",
+        f"- Loss capacity: {p.loss_capacity_pct:g}% of total portfolio",
+        f"- Liquidity needs: {LIQUIDITY_NEED_LABELS[p.liquidity_need]}",
+        f"- Goal: {GOAL_LABELS[p.goal]}",
+        f"- Allocation to this investment: {p.allocation_pct:g}%",
+        "",
+        "## Factors",
+        "",
+        "| Factor | Score | Weight | Why |",
+        "|---|---|---|---|",
+    ]
+    lines += [f"| {f.label} | {f.score:.0f} | {f.weight:.0%} | {f.explanation} |" for f in a.factors]
+    lines += ["", "## Flags", ""]
+    if a.flags:
+        for fl in a.flags:
+            cap = f" (caps the rating at {fl.cap})" if fl.cap else ""
+            lines.append(f"- **{fl.severity.upper()}: {fl.title}.** {fl.detail}{cap}")
+    else:
+        lines.append("- None")
+    hints = improvement_hints(a)
+    if hints:
+        lines += ["", "## What the rules respond to", ""] + [f"- {h}" for h in hints]
+    source = "illustrative sample (not live or current data)" if inv.illustrative else "user-entered assumptions"
+    lines += ["", "---", f"Investment data: {source}.", "", f"*{DISCLAIMER}*", ""]
+    return "\n".join(lines)

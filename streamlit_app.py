@@ -24,7 +24,13 @@ from investor_fit_lens import (
     rank,
     sample_data_notice,
 )
-from investor_fit_lens.presentation import RATING_MEANINGS, comparison_rows, factor_rows, rating_badge_html
+from investor_fit_lens.presentation import (
+    RATING_MEANINGS,
+    assessment_markdown,
+    comparison_rows,
+    factor_rows,
+    rating_badge_html,
+)
 
 CUSTOM_ID = "__custom__"
 
@@ -154,6 +160,13 @@ def show_assessment(profile: InvestorProfile, inv: Investment) -> None:
         st.caption(RATING_MEANINGS[a.rating])
     with right:
         st.metric("Fit score", f"{a.score:.0f} / 100")
+        st.download_button(
+            "Download report (.md)",
+            data=assessment_markdown(a),
+            file_name=f"fit-report-{inv.id.strip('_')}.md",
+            mime="text/markdown",
+            key="download_report",
+        )
         st.caption(
             "An ordinal summary of rule-based judgements. Not a probability or a return forecast; "
             "differences of a few points are not meaningful."

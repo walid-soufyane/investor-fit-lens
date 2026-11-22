@@ -227,3 +227,15 @@ def test_rank_orders_by_rating_then_score(samples):
     keys = [(["Poor fit", "Weak fit", "Partial fit", "Good fit"].index(a.rating), a.score) for a in ranked]
     assert keys == sorted(keys, reverse=True)
     assert len(ranked) == len(samples)
+
+
+def test_markdown_report_contents(samples):
+    from investor_fit_lens.presentation import assessment_markdown
+
+    p = make_profile(liquidity_need="high", horizon_years=1)
+    md = assessment_markdown(assess(p, samples["private_real_estate_fund"]))
+    assert md.startswith("# Investor Fit Lens report: Private real estate fund")
+    assert "**Rating:** Poor fit" in md
+    assert "| Liquidity needs | 0 |" in md
+    assert "CRITICAL: Money may be locked" in md
+    assert "illustrative sample" in md and "not provide personalized financial" in md

@@ -14,6 +14,7 @@ from investor_fit_lens import (
     DISCLAIMER,
     GOAL_LABELS,
     LIQUIDITY_NEED_LABELS,
+    PROFILE_PRESETS,
     RISK_TOLERANCE_LABELS,
     Investment,
     InvestorProfile,
@@ -34,22 +35,45 @@ def _samples() -> list[Investment]:
     return load_sample_investments()
 
 
+def _apply_preset() -> None:
+    preset = PROFILE_PRESETS.get(st.session_state.get("preset", ""))
+    if preset:
+        st.session_state["horizon"] = float(preset["horizon_years"])
+        st.session_state["risk"] = preset["risk_tolerance"]
+        st.session_state["loss"] = int(preset["loss_capacity_pct"])
+        st.session_state["liquidity"] = preset["liquidity_need"]
+        st.session_state["goal"] = preset["goal"]
+        st.session_state["allocation"] = int(preset["allocation_pct"])
+
+
+PROFILE_DEFAULTS = {"horizon": 10.0, "risk": 3, "loss": 15, "liquidity": "low", "goal": "growth", "allocation": 10}
+
+
 def profile_sidebar() -> InvestorProfile:
+    # Widget values live in session state so presets can update them without conflicting defaults.
+    for key, value in PROFILE_DEFAULTS.items():
+        st.session_state.setdefault(key, value)
     st.sidebar.header("Your profile")
     st.sidebar.caption("Every result is relative to these answers. Change them to see how the fit moves.")
+    st.sidebar.selectbox(
+        "Start from an example profile (optional)",
+        ["", *PROFILE_PRESETS],
+        format_func=lambda v: v or "Custom (enter my own answers)",
+        key="preset",
+        on_change=_apply_preset,
+        help="Example situations to explore quickly. They are illustrations, not recommendations.",
+    )
     horizon = st.sidebar.slider(
         "Investment horizon (years)",
         0.0,
         40.0,
-        10.0,
-        0.5,
+        step=0.5,
         key="horizon",
         help="How long this money can stay invested before you expect to need it.",
     )
     risk = st.sidebar.select_slider(
         "Risk tolerance",
         options=list(RISK_TOLERANCE_LABELS),
-        value=3,
         format_func=lambda v: f"{v} - {RISK_TOLERANCE_LABELS[v].split(':')[0]}",
         key="risk",
         help="How comfortable you are with swings in value (willingness).",
@@ -59,7 +83,6 @@ def profile_sidebar() -> InvestorProfile:
         "Loss capacity (% of total portfolio)",
         0,
         60,
-        15,
         key="loss",
         help="The largest one-year decline of your TOTAL portfolio you could absorb without changing your "
         "plans (ability, not willingness).",
@@ -67,18 +90,14 @@ def profile_sidebar() -> InvestorProfile:
     liquidity = st.sidebar.radio(
         "Liquidity needs",
         options=list(LIQUIDITY_NEED_LABELS),
-        index=2,
         format_func=lambda v: LIQUIDITY_NEED_LABELS[v],
         key="liquidity",
     )
-    goal = st.sidebar.selectbox(
-        "Investment goal", options=list(GOAL_LABELS), index=3, format_func=GOAL_LABELS.get, key="goal"
-    )
+    goal = st.sidebar.selectbox("Investment goal", options=list(GOAL_LABELS), format_func=GOAL_LABELS.get, key="goal")
     allocation = st.sidebar.slider(
         "Share of portfolio for this investment (%)",
         1,
         100,
-        10,
         key="allocation",
         help="Used to translate the investment's potential decline into a portfolio-level loss.",
     )

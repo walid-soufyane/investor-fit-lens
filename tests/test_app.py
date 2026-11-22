@@ -68,3 +68,11 @@ def test_custom_investment_form(app):
     app.slider(key="c_risk").set_value(5).run()
     assert not app.exception
     assert "Test product" in _all_text(app)
+
+
+def test_preset_fills_profile(app):
+    app.selectbox(key="preset").select("Cautious saver, short horizon").run()
+    assert not app.exception
+    assert app.radio(key="liquidity").value == "high"
+    assert app.selectbox(key="goal").value == "preservation"
+    assert app.slider(key="horizon").value == 2.0

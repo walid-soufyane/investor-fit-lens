@@ -76,3 +76,48 @@ class InvestorProfile:
         if not 0 < self.allocation_pct <= 100:
             errors.append("allocation_pct must be greater than 0 and at most 100")
         return errors
+
+
+# Example starting points for the UI and CLI. They are illustrations of common
+# situations, not recommendations of how anyone should answer.
+PROFILE_PRESETS: dict[str, dict] = {
+    "Cautious saver, short horizon": {
+        "horizon_years": 2.0,
+        "risk_tolerance": 1,
+        "loss_capacity_pct": 3.0,
+        "liquidity_need": "high",
+        "goal": "preservation",
+        "allocation_pct": 20.0,
+    },
+    "Retiree seeking income": {
+        "horizon_years": 8.0,
+        "risk_tolerance": 2,
+        "loss_capacity_pct": 10.0,
+        "liquidity_need": "medium",
+        "goal": "income",
+        "allocation_pct": 15.0,
+    },
+    "Mid-career balanced investor": {
+        "horizon_years": 15.0,
+        "risk_tolerance": 3,
+        "loss_capacity_pct": 15.0,
+        "liquidity_need": "low",
+        "goal": "balanced",
+        "allocation_pct": 15.0,
+    },
+    "Young long-term grower": {
+        "horizon_years": 30.0,
+        "risk_tolerance": 4,
+        "loss_capacity_pct": 25.0,
+        "liquidity_need": "low",
+        "goal": "growth",
+        "allocation_pct": 20.0,
+    },
+}
+
+
+def preset_profile(name: str, **overrides) -> InvestorProfile:
+    """Build an :class:`InvestorProfile` from a named preset, optionally overriding fields."""
+    if name not in PROFILE_PRESETS:
+        raise KeyError(f"Unknown preset {name!r}. Choose from: {', '.join(PROFILE_PRESETS)}")
+    return InvestorProfile(**{**PROFILE_PRESETS[name], **overrides})

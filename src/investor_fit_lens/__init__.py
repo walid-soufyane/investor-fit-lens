@@ -5,7 +5,14 @@ prediction of returns.
 """
 
 from .investments import Investment, load_sample_investments, sample_data_notice
-from .profile import GOAL_LABELS, LIQUIDITY_NEED_LABELS, RISK_TOLERANCE_LABELS, InvestorProfile
+from .profile import (
+    GOAL_LABELS,
+    LIQUIDITY_NEED_LABELS,
+    PROFILE_PRESETS,
+    RISK_TOLERANCE_LABELS,
+    InvestorProfile,
+    preset_profile,
+)
 from .scoring import WEIGHTS, FactorResult, FitAssessment, Flag, assess, rank, rating_for_score
 
 __version__ = "0.1.0"
@@ -21,6 +28,7 @@ __all__ = [
     "DISCLAIMER",
     "GOAL_LABELS",
     "LIQUIDITY_NEED_LABELS",
+    "PROFILE_PRESETS",
     "RISK_TOLERANCE_LABELS",
     "WEIGHTS",
     "FactorResult",
@@ -31,6 +39,7 @@ __all__ = [
     "__version__",
     "assess",
     "load_sample_investments",
+    "preset_profile",
     "rank",
     "rating_for_score",
     "sample_data_notice",
